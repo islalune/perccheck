@@ -173,12 +173,13 @@ async function main() {
   console.log(`Population: ${pop.size} counties`);
 
   // --- 3. SDA: septic suitability per county, one query per STATE --------
-  // areasymbol's trailing 3 digits are the county FIPS for the overwhelming
-  // majority of survey areas (documented NRCS convention), so filtering
-  // legend.areasymbol LIKE '<usps><countyfips>%' catches the normal case and
-  // also any split survey areas for that same county (e.g. a national
-  // forest carved out separately) in one pass. Acreage-weighted dominant
-  // condition across every mapunit x dominant-component row SDA returns.
+  // Soil survey areas do NOT reliably follow a "trailing 3 digits = county
+  // FIPS" convention - large/complex counties are routinely split into named
+  // sub-areas (e.g. CA676 "Los Angeles County, California, West San Fernando
+  // Valley Area", CA772 "Los Padres National Forest Area"), and this is most
+  // common for exactly the big, high-population counties that matter most
+  // for this site. So the join is done on the legend's free-text areaname
+  // against each state's actual county names, not on the areasymbol digits.
   const cacheFile = path.join(CACHE, 'sda-septic-by-county.json');
   let sdaRows;
   if (fs.existsSync(cacheFile)) {
@@ -203,31 +204,76 @@ async function main() {
       `.replace(/\s+/g, ' ').trim();
       const rows = await sdaQuery(sql);
       console.log(`  SDA ${usps}: ${rows.length} component-interp rows`);
-      sdaRows.push(...rows.map((r) => ({ ...r, usps })));
+      // SDA's Table is an array of value-arrays (column order = SELECT order),
+      // not an array of named objects - map explicitly rather than spreading.
+      sdaRows.push(...rows.map(([areasymbol, mukey, muacres, cokey, comppct_r, interphrc]) =>
+        ({ areasymbol, mukey, muacres, cokey, comppct_r, interphrc, usps })));
       await sleep(500);
     }
     fs.writeFileSync(cacheFile, JSON.stringify(sdaRows));
   }
 
-  // Aggregate to county: area symbol's trailing digits -> county FIPS,
-  // weighted by muacres * comppct_r (the share of the map unit this
-  // component covers), picking the acreage-weighted dominant rating class.
+  // --- 3b. legend areaname lookup, one query nationwide (small table) ----
+  const legendCacheFile = path.join(CACHE, 'sda-legend-areanames.json');
+  let areanameByAreasymbol;
+  if (fs.existsSync(legendCacheFile)) {
+    areanameByAreasymbol = JSON.parse(fs.readFileSync(legendCacheFile, 'utf8'));
+    console.log(`  cached  sda-legend-areanames.json (${Object.keys(areanameByAreasymbol).length} areas)`);
+  } else {
+    const rows = await sdaQuery('SELECT areasymbol, areaname FROM legend');
+    areanameByAreasymbol = Object.fromEntries(rows.map(([areasymbol, areaname]) => [areasymbol, areaname]));
+    fs.writeFileSync(legendCacheFile, JSON.stringify(areanameByAreasymbol));
+    console.log(`  fetched sda-legend-areanames.json (${rows.length} areas)`);
+  }
+
+  // Match each survey area's areaname text against every county name in that
+  // state (stripped of its "County"/"Parish"/"Borough"/etc suffix), word-
+  // boundary, case-insensitive. A joint survey area naming multiple counties
+  // ("Parts of Butte and Plumas Counties") credits weight to every county it
+  // names - there's no per-county acreage split available at this join level,
+  // so this is an approximation, same honesty tradeoff as the rest of the
+  // pipeline's boundary handling.
+  const SUFFIX_RE = /\s+(City and Borough|Census Area|Municipality|Municipio|Borough|Parish|County|city)$/i;
+  const baseName = (name) => name.replace(SUFFIX_RE, '').trim();
+  const countyNamesByState = new Map(); // usps -> [{ fips, base }]
+  for (const [fips, geo] of counties) {
+    const arr = countyNamesByState.get(geo.usps) ?? [];
+    arr.push({ fips, base: baseName(geo.name) });
+    countyNamesByState.set(geo.usps, arr);
+  }
+  const escapeRe = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
   const bySda = new Map(); // fips -> { class -> weight }
-  let unmatchedAreasymbol = 0;
+  let unmatchedRows = 0;
+  let unmatchedAreas = 0;
+  const unmatchedExamples = [];
+  const seenUnmatchedAreas = new Set();
   for (const r of sdaRows) {
-    const m = /^[A-Za-z]{2}(\d{3})$/.exec(r.areasymbol || '');
-    if (!m) { unmatchedAreasymbol++; continue; }
-    const stateFips = Object.entries(STATE_FIPS_TO_USPS).find(([, u]) => u === r.usps)?.[0];
-    if (!stateFips) continue;
-    const fips = stateFips + m[1];
     const weight = (Number(r.muacres) || 0) * (Number(r.comppct_r) || 0);
     if (!weight || !r.interphrc) continue;
+    const areaname = areanameByAreasymbol[r.areasymbol];
+    const candidates = countyNamesByState.get(r.usps) ?? [];
+    const matches = areaname
+      ? candidates.filter((c) => c.base && new RegExp(`\\b${escapeRe(c.base)}\\b`, 'i').test(areaname))
+      : [];
+    if (!matches.length) {
+      unmatchedRows++;
+      if (!seenUnmatchedAreas.has(r.areasymbol)) {
+        seenUnmatchedAreas.add(r.areasymbol);
+        unmatchedAreas++;
+        if (unmatchedExamples.length < 10) unmatchedExamples.push(`${r.areasymbol} (${areaname ?? 'no areaname'})`);
+      }
+      continue;
+    }
     const cls = String(r.interphrc).trim();
-    const cur = bySda.get(fips) ?? {};
-    cur[cls] = (cur[cls] ?? 0) + weight;
-    bySda.set(fips, cur);
+    for (const { fips } of matches) {
+      const cur = bySda.get(fips) ?? {};
+      cur[cls] = (cur[cls] ?? 0) + weight;
+      bySda.set(fips, cur);
+    }
   }
-  console.log(`SDA aggregated to ${bySda.size} counties (${unmatchedAreasymbol} rows with an unparseable areasymbol)`);
+  console.log(`SDA aggregated to ${bySda.size} counties (${unmatchedRows} rows across ${unmatchedAreas} survey areas had no county-name match)`);
+  if (unmatchedExamples.length) console.log(`  unmatched examples: ${unmatchedExamples.join('; ')}`);
 
   // --- join, driven by the gazetteer so every US county is represented ---
   const rows = [];
@@ -270,7 +316,7 @@ async function main() {
       url: SDA,
       dataset: "USDA Soil Data Access, SSURGO 'ENG - Septic Tank Absorption Fields' component interpretation (cointerp, ruledepth 0), major components only, aggregated by mapunit acres x component percent to an area-weighted dominant rating class per county",
       gives: "Per-county dominant suitability class (Not limited / Somewhat limited / Very limited), the % of weighted area in that dominant class, and the % rated Very limited specifically",
-      note: 'Map-unit scale (roughly 1:12,000-1:63,360), never a single-parcel reading - an actual permit still needs a site percolation test. Areasymbol-to-county join uses the documented NRCS convention that the trailing 3 digits of a survey areasymbol are the county FIPS code; this holds for the large majority of survey areas but not every split/joint survey area, so a residual gap is expected and reported, not silently dropped.',
+      note: 'Map-unit scale (roughly 1:12,000-1:63,360), never a single-parcel reading - an actual permit still needs a site percolation test. Areasymbol-to-county join matches each survey area\'s free-text areaname (from the legend table) against every county name in that state, since areasymbol digits do not reliably encode county FIPS (large/complex counties are routinely split into named sub-areas, e.g. "Los Angeles County, California, West San Fernando Valley Area"). A joint survey area naming multiple counties credits weight to every county it names rather than splitting acreage per county, so multi-county areas are a modest approximation; unmatched survey areas (no county name found in the text) are reported, not silently dropped.',
     },
     gazetteer: { url: GAZ, vintage: '2025', gives: 'county FIPS, name, state, internal lat/lon, land area' },
     population: { url: POP, vintage: 'POPESTIMATE2024', sumlev: '050 county' },
