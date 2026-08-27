@@ -528,9 +528,12 @@ export function staticPages() {
         },
         {
           h2: 'Cookies',
-          html: `<p>Analytics cookies may be set to distinguish repeat visits from new ones. No cookie on this site is used ` +
-            `to build an advertising profile unless a display-advertising network is active, in which case that network's ` +
-            `own cookie and privacy disclosures apply and are linked from this page once live.</p>`,
+          html: ADSENSE_ON
+            ? `<p>Analytics cookies may be set to distinguish repeat visits from new ones. Google AdSense, active on this site, also sets cookies to personalize the ads shown to you; see the Advertising section below and ` +
+              `Google's own cookie and privacy disclosures for how that works.</p>`
+            : `<p>Analytics cookies may be set to distinguish repeat visits from new ones. No cookie on this site is used ` +
+              `to build an advertising profile unless a display-advertising network is active, in which case that network's ` +
+              `own cookie and privacy disclosures apply and are linked from this page once live.</p>`,
         },
         {
           h2: 'Advertising and affiliate links',
