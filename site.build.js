@@ -18,7 +18,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 // disclosure going live in the same build.
 // ---------------------------------------------------------------------------
 const AFFILIATE_PROGRAMS = {
-  septicPro: { name: 'Angi', url: (id) => `https://www.angi.com/companylist/us/septic/septic-tank-services.htm?ref=${id}` },
+  // Angi/HomeAdvisor's pro-referral program is CJ-network-brokered (per.
+  // revenue.md), not a plain query param on angi.com - a guessed ?ref= here
+  // would generate a link that loads fine and never tracks a commission,
+  // the same leak already found and fixed on floodzonefinder/heatpumppayback
+  // 2026-08-27. The id field IS the full CJ-issued tracking link at approval.
+  septicPro: { name: 'Angi', url: (id) => id },
   amazon: { name: 'Amazon Associates', url: (id) => `https://www.amazon.com/s?k=septic+system+maintenance&tag=${id}` },
 };
 const ACTIVE_SEPTIC_PRO_AFFILIATE = site.revenue?.affiliates?.septicPro
