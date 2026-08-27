@@ -117,11 +117,15 @@ export function page(row) {
   const veryTxt = rated ? pct1(summary.veryLimitedPct) : '';
   const sameShare = rated && summary.dominantSharePct === summary.veryLimitedPct;
 
-  const title = `${county}, ${state} Septic Suitability`;
+  // Google truncates titles past ~60 display chars. A handful of county/
+  // planning-region names (Connecticut's long-form names especially) push
+  // "<place> Septic Suitability" over that with the state included - drop
+  // the state rather than truncate blindly, since the slug already carries it.
+  let title = `${place} Septic Rating`;
+  if (title.length > 60) title = `${county} Septic Rating`;
   const description = rated
-    ? `${place}'s dominant soil rates "${summary.class}" for a septic absorption field (USDA SSURGO), covering ` +
-      `${pct1(summary.dominantSharePct)} of the county. What that means for cost, and why a real perc test still decides one lot.`
-    : `${place} has no USDA SSURGO septic-suitability rating on file. What that means, and how much a real perc test costs to find out.`;
+    ? `${place}: "${summary.class}" septic soil, USDA SSURGO (${shareTxt} of county). What it means for cost and why a perc test still decides your lot.`
+    : `${place}: no USDA SSURGO septic rating on file. What that means, and what a perc test costs to find out.`;
 
   // --- the verdict itself -----------------------------------------------
   // Skewed dataset: 2,913 of 3,144 rated counties (93%) share "Very limited",
@@ -344,8 +348,8 @@ export function page(row) {
 
 export function home() {
   return {
-    title: `${site.name} — Septic & Perc Test Suitability by County, from USDA Soil Data`,
-    description: `Real USDA SSURGO soil-survey septic suitability for all ${TOTAL_COUNTIES.toLocaleString('en-US')} US counties - which soils pass a perc test, which don't, and what an engineered system costs where they don't.`,
+    title: `${site.name} — Septic & Perc Test Suitability by County`,
+    description: `Real USDA SSURGO septic suitability for all ${TOTAL_COUNTIES.toLocaleString('en-US')} US counties - which soils pass a perc test, and what an engineered system costs where they don't.`,
     blocks: [
       {
         h2: 'The question this site answers',
@@ -632,7 +636,7 @@ export function guides() {
     {
       slug: 'data-quality',
       title: `Where this data comes from, and its real limits`,
-      description: `How ${site.name} turns USDA's raw SSURGO soil survey into one county-level rating - the area-weighting, the county-matching approximation, and which counties are left unrated rather than guessed at.`,
+      description: `How ${site.name} turns raw SSURGO soil data into one county rating - the area-weighting, the county-matching approximation, and what's left unrated.`,
       blocks: [
         {
           h2: 'The source',
@@ -788,5 +792,87 @@ export function guides() {
         },
       ],
     },
+    {
+      slug: 'embed-widget',
+      title: `Embed the ${site.name} Septic Suitability Badge`,
+      description: `A free, live septic-suitability badge for any of the ${rows.length} counties this site covers - one iframe, no sign-up, credited back to ${site.name}.`,
+      blocks: [
+        {
+          h2: 'A live rating, not a screenshot',
+          html: `<p>Every county on this site has a small live badge version of its own USDA SSURGO septic-suitability rating - meant ` +
+            `for a real-estate listing page, a land-sale site, or a local-news piece that references a specific county's rating ` +
+            `instead of a screenshot that goes stale if USDA revises the survey.</p>`,
+        },
+        {
+          h2: 'How to add one',
+          html: `<p>Pick any county from this site and use its slug - the part of the URL after the domain, e.g. ` +
+            `<code>${byNationalRank[0].slug}</code> for ${pageLink(byNationalRank[0].slug, `${byNationalRank[0].county}, ${byNationalRank[0].state}`)} - ` +
+            `in this snippet:</p>
+<pre class="scroll"><code>&lt;iframe src="${site.origin}/embed?county=COUNTY-SLUG" width="320" height="200"
+  style="border:0" loading="lazy" title="Septic suitability widget"&gt;&lt;/iframe&gt;</code></pre>
+<p>The credit link inside the widget points back to the county's full page and is marked ` +
+            `<code>rel="nofollow"</code>, in line with Google's policy on links inside syndicated or embeddable widgets.</p>`,
+        },
+      ],
+    },
   ]);
+}
+
+// ---------------------------------------------------------------------------
+// Small client-side dataset and the embeddable widget itself.
+// ---------------------------------------------------------------------------
+
+export function dataFiles() {
+  return {
+    'data/counties.json': rows.map((r) => ({
+      slug: r.slug, county: r.county, state: r.state,
+      class: r.summary.class, tier: r.summary.tier,
+    })),
+  };
+}
+
+export function embed() {
+  return {
+    slug: 'embed',
+    title: `${site.name} — Septic Suitability Badge`,
+    body: `
+<style>#w-body{font:14px/1.4 system-ui,sans-serif} #w-figure{font-size:1.3rem;font-weight:700;margin:8px 0 4px}</style>
+<div id="w-body">
+  <span class="badge unrated" id="w-badge">Loading…</span>
+  <div id="w-figure">—</div>
+  <p id="w-says">Fetching this county's septic-suitability rating.</p>
+</div>
+<p style="font-size:.78rem;margin-top:10px">
+  <a id="w-link" href="${site.origin}/" rel="nofollow noopener" target="_top">Full breakdown at ${site.name}</a>
+</p>
+<script>
+(function(){
+  var params = new URLSearchParams(location.search);
+  var county = params.get('county');
+  var badge = document.getElementById('w-badge');
+  var figure = document.getElementById('w-figure');
+  var says = document.getElementById('w-says');
+  var link = document.getElementById('w-link');
+  function badgeClass(tier){
+    return { 'high-constraint': 'bad', 'moderate-constraint': 'mid', 'low-constraint': 'good' }[tier] || 'unrated';
+  }
+  function fail(msg){ says.textContent = msg; badge.style.display = 'none'; }
+  if (!county) { fail('Add ?county=COUNTY-SLUG to the iframe URL.'); return; }
+  fetch('${site.origin}/data/counties.json').then(function(r){ return r.json(); }).then(function(rows){
+    var row = rows.filter(function(r){ return r.slug === county; })[0];
+    if (!row) { fail('Unknown county slug "' + county + '".'); return; }
+    badge.className = 'badge ' + badgeClass(row.tier);
+    badge.textContent = row.county + ', ' + row.state;
+    if (row.class) {
+      figure.textContent = row.class;
+      says.textContent = 'USDA SSURGO dominant class for a septic absorption field.';
+    } else {
+      figure.textContent = '—';
+      says.textContent = 'Not rated in USDA\\'s survey data.';
+    }
+    link.href = '${site.origin}/' + row.slug;
+  }).catch(function(){ fail('Could not load county data.'); });
+})();
+</script>`,
+  };
 }
