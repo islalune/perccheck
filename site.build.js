@@ -269,6 +269,22 @@ export function page(row) {
     : '';
   blocks.push({ h2: costH2, html: `<p>${costBody}</p>${cta}` });
 
+  // Secondary, low-priority Amazon CTA per revenue.md's build requirement 4:
+  // maintenance add-ons (RID-X/enzyme treatment, risers, effluent filters,
+  // DIY soil/perc test kits) for anyone already on or about to install a
+  // septic system, regardless of soil tier - dark until an Associates id
+  // exists.
+  if (ACTIVE_AMAZON_AFFILIATE) {
+    blocks.push({
+      h2: pick(slug + '-amazon-h2', ['Septic maintenance supplies', 'If you already have a system to maintain']),
+      html: `<p>${pick(slug + '-amazon-body', [
+          'Whether this lot ends up on a conventional or engineered system, enzyme treatments, tank risers, effluent filters, and DIY soil test kits are the ongoing maintenance items most septic owners eventually buy.',
+          'A septic system, once installed, still needs upkeep - enzyme/bacteria treatments, risers for easier access, effluent filters, and a DIY soil test kit if you want a rough read before paying for a professional perc test.',
+        ])} <a href="${ACTIVE_AMAZON_AFFILIATE.url(ACTIVE_AMAZON_AFFILIATE.id)}" rel="sponsored noopener" target="_blank">Browse septic maintenance supplies on Amazon</a>.</p>` +
+        `<p class="disclosure">Affiliate link: ${esc(site.name)} earns a commission on a qualifying Amazon purchase, at no extra cost to you.</p>`,
+    });
+  }
+
   // --- how this county compares --------------------------------------------
   if (rated) {
     const nRank = nationalRank.get(row.fips);
@@ -289,6 +305,23 @@ export function page(row) {
     ]);
     blocks.push({ h2: compareH2, html: `<p>${compareBody}</p>` });
   }
+
+  // --- further reading -------------------------------------------------------
+  // audit-links.js requires every entity page to link >=2 guides - with 3,145
+  // near-identical county pages, an unlinked guide is effectively unreachable
+  // for Googlebot. Always includes data-quality (explains the rating itself)
+  // plus one tier-relevant guide, so the second link is actually on-topic
+  // rather than padding.
+  const tierGuide = summary.tier === 'high-constraint'
+    ? { slug: 'conventional-vs-engineered-septic-systems', label: 'Conventional vs. engineered septic systems' }
+    : summary.tier === 'moderate-constraint'
+      ? { slug: 'how-a-perc-test-works', label: 'How a percolation test actually works' }
+      : { slug: 'buying-land-without-sewer-septic-checklist', label: 'What to check before buying rural land on septic' };
+  blocks.push({
+    h2: pick(slug + '-further-h2', ['Further reading', 'Before you act on this', 'Related guides']),
+    html: `<p>${guideLink('data-quality', 'How this rating is built, and its real limits')} &middot; ` +
+      `${guideLink(tierGuide.slug, tierGuide.label)}</p>`,
+  });
 
   return {
     slug,
@@ -559,8 +592,39 @@ export function staticPages() {
 // Guides - answer the questions the county data itself raises, not filler.
 // ---------------------------------------------------------------------------
 
+/**
+ * Every guide ends with a few real counties and a couple of sibling guides.
+ * audit-links.js requires >=3 entity links and >=2 guide links per guide -
+ * with 3,145 near-identical county pages, guides are the crawl path
+ * Googlebot actually uses to reach most of them, so a guide that links
+ * nowhere is a dead end for both the reader and the crawler.
+ */
+function withRelated(list) {
+  const spread = ['high-constraint', 'moderate-constraint', 'low-constraint']
+    .map((tier) => byNationalRank.find((r) => r.summary.tier === tier))
+    .filter(Boolean);
+
+  return list.map((g, i) => {
+    const siblings = list.filter((x) => x.slug !== g.slug);
+    const near = [siblings[i % siblings.length], siblings[(i + 1) % siblings.length]].filter(Boolean);
+    const picks = g.related ?? spread;
+
+    return {
+      ...g,
+      blocks: [...g.blocks, {
+        h2: 'Where to go next',
+        html: '<p>Real counties this plays out on: ' +
+          picks.map((r) => pageLink(r.slug, `${r.county}, ${r.state}`)).join(', ') +
+          '.</p><p>' +
+          near.map((x) => guideLink(x.slug, x.title)).join(' &middot; ') +
+          '</p>',
+      }],
+    };
+  });
+}
+
 export function guides() {
-  return [
+  return withRelated([
     {
       slug: 'data-quality',
       title: `Where this data comes from, and its real limits`,
@@ -709,5 +773,5 @@ export function guides() {
         },
       ],
     },
-  ];
+  ]);
 }
