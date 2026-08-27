@@ -1,0 +1,23 @@
+{
+  "name": "PercCheck",
+  "host": "perccheck.com",
+  "gcpProject": "perccheck-site",
+  "candidate": "septic-soil-suitability",
+  "dataset": "USDA SSURGO soil survey, percolation and drainage class per parcel",
+  "secrets": {
+    "searchConsoleSA": "perccheck-seo-sa",
+    "pageSpeedKey": "perccheck-psi-key"
+  },
+  "vitalsUrls": [
+    "/"
+  ],
+  "uniqueness": {
+    "sample": 120,
+    "medianMin": 0.3,
+    "pageMin": 0.2
+  },
+  "revenue": {
+    "adsenseId": "pub-1937434719533429",
+    "affiliates": {}
+  }
+}
