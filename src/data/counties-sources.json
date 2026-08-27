@@ -1,11 +1,11 @@
 {
-  "retrieved": "2026-08-27T05:48:20.282Z",
+  "retrieved": "2026-08-27T07:06:51.060Z",
   "counties": 3144,
   "septicSuitability": {
     "url": "https://sdmdataaccess.nrcs.usda.gov/Tabular/post.rest",
     "dataset": "USDA Soil Data Access, SSURGO 'ENG - Septic Tank Absorption Fields' component interpretation (cointerp, ruledepth 0), major components only, aggregated by mapunit acres x component percent to an area-weighted dominant rating class per county",
     "gives": "Per-county dominant suitability class (Not limited / Somewhat limited / Very limited), the % of weighted area in that dominant class, and the % rated Very limited specifically",
-    "note": "Map-unit scale (roughly 1:12,000-1:63,360), never a single-parcel reading - an actual permit still needs a site percolation test. Areasymbol-to-county join uses the documented NRCS convention that the trailing 3 digits of a survey areasymbol are the county FIPS code; this holds for the large majority of survey areas but not every split/joint survey area, so a residual gap is expected and reported, not silently dropped."
+    "note": "Map-unit scale (roughly 1:12,000-1:63,360), never a single-parcel reading - an actual permit still needs a site percolation test. Areasymbol-to-county join matches each survey area's free-text areaname (from the legend table) against every county name in that state, since areasymbol digits do not reliably encode county FIPS (large/complex counties are routinely split into named sub-areas, e.g. \"Los Angeles County, California, West San Fernando Valley Area\"). A joint survey area naming multiple counties credits weight to every county it names rather than splitting acreage per county, so multi-county areas are a modest approximation; unmatched survey areas (no county name found in the text) are reported, not silently dropped."
   },
   "gazetteer": {
     "url": "https://www2.census.gov/geo/docs/maps-data/data/gazetteer/2025_Gazetteer/2025_Gaz_counties_national.zip",
@@ -19,6 +19,6 @@
   },
   "dropped": {
     "noPopulationMatch": 78,
-    "noSdaMatch": 753
+    "noSdaMatch": 59
   }
 }
