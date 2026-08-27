@@ -600,8 +600,12 @@ export function staticPages() {
  * nowhere is a dead end for both the reader and the crawler.
  */
 function withRelated(list) {
-  const spread = ['high-constraint', 'moderate-constraint', 'low-constraint']
-    .map((tier) => byNationalRank.find((r) => r.summary.tier === tier))
+  // Picked by RANK POSITION, not tier: 0 of 3,144 rated counties currently
+  // read "Not limited" (low-constraint), so a tier-lookup for it always came
+  // back undefined and left guides one entity link short of the audit's
+  // floor of 3. Most/median/least-constrained by rank always yields 3
+  // distinct real counties regardless of how skewed the class distribution is.
+  const spread = [byNationalRank[0], byNationalRank[Math.floor(byNationalRank.length / 2)], byNationalRank.at(-1)]
     .filter(Boolean);
 
   return list.map((g, i) => {
