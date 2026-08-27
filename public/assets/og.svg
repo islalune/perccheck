@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" width="1200" height="630">
+<rect width="1200" height="630" fill="#fbfaf8"/>
+<rect x="0" y="0" width="1200" height="10" fill="hsl(138 42% 32%)"/>
+<rect x="80" y="150" width="96" height="96" rx="21" fill="hsl(138 42% 32%)" opacity=".12"/>
+<g transform="translate(80,150) scale(1.5)"><path d="M32 4c-7 10-13 18-13 25a13 13 0 0 0 26 0c0-7-6-15-13-25Z" fill="hsl(138 45% 32%)"/><rect x="6" y="42" width="52" height="6" rx="2" fill="hsl(138 45% 32%)"/><rect x="10" y="50" width="44" height="6" rx="2" fill="hsl(138 45% 32%)" opacity=".6"/><rect x="16" y="58" width="32" height="5" rx="2" fill="hsl(138 45% 32%)" opacity=".35"/></g>
+<text x="80" y="330" font-family="Georgia,serif" font-size="66" fill="#15171b">PercCheck</text>
+<text x="80" y="395" font-family="-apple-system,Helvetica,sans-serif" font-size="30" fill="#6b7280">Real USDA SSURGO soil-survey septic suitability for all 3,144 US counties </text>
+<text x="80" y="560" font-family="-apple-system,Helvetica,sans-serif" font-size="22" fill="#9aa1ad">perccheck.com</text>
+</svg>
