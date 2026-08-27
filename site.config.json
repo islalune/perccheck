@@ -6,7 +6,8 @@
   "dataset": "USDA SSURGO soil survey, percolation and drainage class per parcel",
   "secrets": {
     "searchConsoleSA": "perccheck-seo-sa",
-    "pageSpeedKey": "perccheck-psi-key"
+    "pageSpeedKey": "perccheck-psi-key",
+    "searchConsoleSAEmail": "perccheck-seo-sa@perccheck-site.iam.gserviceaccount.com"
   },
   "vitalsUrls": [
     "/"
