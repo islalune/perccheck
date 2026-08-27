@@ -117,7 +117,7 @@ export function page(row) {
   const veryTxt = rated ? pct1(summary.veryLimitedPct) : '';
   const sameShare = rated && summary.dominantSharePct === summary.veryLimitedPct;
 
-  const title = `${county}, ${state} Septic & Perc Test Suitability — ${site.name}`;
+  const title = `${county}, ${state} Septic Suitability`;
   const description = rated
     ? `${place}'s dominant soil rates "${summary.class}" for a septic absorption field (USDA SSURGO), covering ` +
       `${pct1(summary.dominantSharePct)} of the county. What that means for cost, and why a real perc test still decides one lot.`
@@ -229,27 +229,39 @@ export function page(row) {
     `${county}: conventional vs. engineered cost`,
   ]);
   const constrained = rated && summary.tier !== 'low-constraint';
-  const costLead = constrained
-    ? pick(slug + '-cost-lead-c', [
-        `With ${shareTxt} of ${county} rating "${esc(summary.class)}", a standard gravity system is not a safe assumption here.`,
-        `${county}'s soil reading pushes the likely outcome toward an engineered system rather than a conventional one.`,
-        `Given ${county}'s rating, plan for the engineered-system range rather than the conventional one.`,
-        `${shareTxt} of ${county} carrying a "${esc(summary.class)}" reading changes the realistic budget here.`,
-      ])
-    : pick(slug + '-cost-lead-o', [
-        `With ${shareTxt} of ${county} rating "not limited," a conventional gravity system is the reasonable starting assumption.`,
-        `${county}'s soil reading points toward a conventional system as the likely outcome, not the exception.`,
-        `Given ${county}'s rating, the conventional range is the realistic budget to start from here.`,
-      ]);
-  const costDetail = constrained
-    ? pick(slug + '-cost-detail-c', [
-        `Conventional systems run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} where they pass; where they don't, engineered alternatives (mound or aerobic treatment, whichever the health department requires) run ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)} - budget toward the higher figure until a perc test says otherwise.`,
-        `The engineered-system range, ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)} (mound or aerobic treatment), is the more realistic number to plan around, against ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} for a conventional system on the rare lot that passes.`,
-      ])
-    : pick(slug + '-cost-detail-o', [
-        `Conventional systems run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}, typically around ${money(CONVENTIONAL_SYSTEM_COST_USD.typical)}. A specific lot can still differ - the perc test is what a permit application actually requires.`,
-        `Conventional systems (${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}) are the likely outcome, though the engineered range (${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)}) is worth knowing in case one lot's own soil doesn't match the county's.`,
-      ]);
+  let costLead, costDetail;
+  if (!rated) {
+    costLead = pick(slug + '-cost-lead-u', [
+      `With no SSURGO rating to go on, ${county} has no county-level steer either way on system cost.`,
+      `${county} carries no dominant soil rating, so there's no shortcut here - it comes down entirely to the site-specific test.`,
+      `Without a countywide reading for ${county}, both cost ranges below are worth knowing before a test, not just one.`,
+    ]);
+    costDetail = pick(slug + '-cost-detail-u', [
+      `Conventional systems typically run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}; where the soil doesn't allow one, engineered alternatives run ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)}. A perc test decides which range applies.`,
+      `Nationally, conventional systems run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} and engineered alternatives run ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)} - which one applies to a lot in ${county} is exactly what a perc test settles.`,
+    ]);
+  } else if (constrained) {
+    costLead = pick(slug + '-cost-lead-c', [
+      `With ${shareTxt} of ${county} rating "${esc(summary.class)}", a standard gravity system is not a safe assumption here.`,
+      `${county}'s soil reading pushes the likely outcome toward an engineered system rather than a conventional one.`,
+      `Given ${county}'s rating, plan for the engineered-system range rather than the conventional one.`,
+      `${shareTxt} of ${county} carrying a "${esc(summary.class)}" reading changes the realistic budget here.`,
+    ]);
+    costDetail = pick(slug + '-cost-detail-c', [
+      `Conventional systems run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} where they pass; where they don't, engineered alternatives (mound or aerobic treatment, whichever the health department requires) run ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)} - budget toward the higher figure until a perc test says otherwise.`,
+      `The engineered-system range, ${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)} (mound or aerobic treatment), is the more realistic number to plan around, against ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} for a conventional system on the rare lot that passes.`,
+    ]);
+  } else {
+    costLead = pick(slug + '-cost-lead-o', [
+      `With ${shareTxt} of ${county} rating "not limited," a conventional gravity system is the reasonable starting assumption.`,
+      `${county}'s soil reading points toward a conventional system as the likely outcome, not the exception.`,
+      `Given ${county}'s rating, the conventional range is the realistic budget to start from here.`,
+    ]);
+    costDetail = pick(slug + '-cost-detail-o', [
+      `Conventional systems run ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}, typically around ${money(CONVENTIONAL_SYSTEM_COST_USD.typical)}. A specific lot can still differ - the perc test is what a permit application actually requires.`,
+      `Conventional systems (${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}) are the likely outcome, though the engineered range (${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)}) is worth knowing in case one lot's own soil doesn't match the county's.`,
+    ]);
+  }
   const costBody = `${costLead} ${costDetail}`;
   const cta = ACTIVE_SEPTIC_PRO_AFFILIATE
     ? `<p class="cta"><strong><a href="${ACTIVE_SEPTIC_PRO_AFFILIATE.url(ACTIVE_SEPTIC_PRO_AFFILIATE.id)}" rel="sponsored noopener" target="_blank">Find a septic or perc-test pro near ${esc(county)}</a></strong></p>
