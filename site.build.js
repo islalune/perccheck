@@ -52,7 +52,7 @@ export const rows = RAW_COUNTIES.map((r) => ({
   county: r.county,
   state: r.state,
   stateName: r.state_name,
-  landSqMi: Number(r.land_sq_mi),
+  landSqMi: Math.round(Number(r.land_sq_mi)),
   population: Number(r.population),
   slug: slugify(`${r.county} ${r.state}`),
   raw: r,
