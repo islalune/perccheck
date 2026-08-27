@@ -554,3 +554,160 @@ export function staticPages() {
     },
   ];
 }
+
+// ---------------------------------------------------------------------------
+// Guides - answer the questions the county data itself raises, not filler.
+// ---------------------------------------------------------------------------
+
+export function guides() {
+  return [
+    {
+      slug: 'data-quality',
+      title: `Where this data comes from, and its real limits`,
+      description: `How ${site.name} turns USDA's raw SSURGO soil survey into one county-level rating - the area-weighting, the county-matching approximation, and which counties are left unrated rather than guessed at.`,
+      blocks: [
+        {
+          h2: 'The source',
+          html: `<p>Every county's rating comes from USDA's Soil Data Access, specifically the "ENG - Septic Tank Absorption Fields" ` +
+            `component interpretation within the SSURGO soil survey. That's the same interpretation a local health department's ` +
+            `own soil scientist would pull, aggregated here by mapunit acreage x component percent into one dominant rating class ` +
+            `per county.</p>`,
+        },
+        {
+          h2: 'Why it\'s a county figure, not a parcel figure',
+          html: `<p>SSURGO's map units are drawn at roughly 1:12,000-1:63,360 scale - useful for comparing places, not for one address. ` +
+            `${esc(site.name)} reports the AREA-WEIGHTED DOMINANT condition across every map unit in a county's survey area(s). A ` +
+            `real building permit still requires a site-specific percolation test; nothing here substitutes for one.</p>`,
+        },
+        {
+          h2: 'How survey areas get matched to counties',
+          html: `<p>SSURGO's survey areas don't reliably encode a county FIPS code in their ID - large or complex counties are often ` +
+            `split into named sub-areas (for example, "Los Angeles County, California, West San Fernando Valley Area"). Each survey ` +
+            `area's free-text name is matched against every county name in its state to make that join. A survey area naming ` +
+            `multiple counties credits its weight to every county it names, which makes multi-county areas a modest approximation ` +
+            `rather than an exact split. 59 survey areas had no county name findable in their text at all; those counties are ` +
+            `reported as unrated rather than assigned a guess.</p>`,
+        },
+        {
+          h2: '"Not rated" is a real answer, not a gap',
+          html: `<p>USDA's own data distinguishes "Not rated" (the dominant component - often already-developed urban land, water, or ` +
+            `similar - simply carries no absorption-field interpretation) from a county this site's matching process never found at ` +
+            `all. Both show up here as honestly unrated, since guessing a class for either would be worse than saying nothing.</p>`,
+        },
+        {
+          h2: 'The cost figures',
+          html: `<p>Conventional system costs (${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)}) and ` +
+            `engineered system costs (${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)}, covering both ` +
+            `mound and aerobic-treatment designs) are sourced from Angi's and HomeGuide's 2026 septic-system cost guides. Perc test cost ` +
+            `(${money(PERC_TEST_COST_USD.low)}-${money(PERC_TEST_COST_USD.high)}) is sourced from Bob Vila's 2026 percolation-test cost ` +
+            `guide. These are national contractor-pricing ranges, not county-specific quotes.</p>`,
+        },
+      ],
+    },
+    {
+      slug: 'how-a-perc-test-works',
+      title: `How a percolation test actually works`,
+      description: `What happens at a real percolation test, who orders it, and why the county-level rating on this site can't replace one.`,
+      blocks: [
+        {
+          h2: 'What it measures',
+          html: `<p>A percolation ("perc") test digs one or more holes to the depth a septic drain field would sit at, fills them with ` +
+            `water, and times how fast the water level drops once the soil is saturated. That rate - minutes per inch - determines ` +
+            `whether a standard drain field can absorb wastewater fast enough, and how large the field needs to be if it can.</p>`,
+        },
+        {
+          h2: 'Who performs it, and when',
+          html: `<p>Most jurisdictions require a licensed soil evaluator, engineer, or the local health department itself to either run or ` +
+            `witness the test before a septic permit is issued. It's typically ordered after a buyer is under contract on raw land, or ` +
+            `before a builder finalizes a septic design - not something a homeowner runs informally, since the result has to be filed ` +
+            `with the permit application.</p>`,
+        },
+        {
+          h2: 'Why a county-level rating like this site\'s isn\'t a substitute',
+          html: `<p>USDA's SSURGO data is built from soil-scientist mapping at a scale meant for planning and comparison, generalized ` +
+            `across a whole survey area. A perc test measures the specific hole, on the specific lot, at the specific depth a system ` +
+            `would actually use. Two lots in a county rated the same way can still perc differently - the county figure is what to ` +
+            `expect walking in, not what a permit application will accept.</p>`,
+        },
+        {
+          h2: 'If a lot fails',
+          html: `<p>A failed perc test doesn't necessarily end a project. It usually means an engineered alternative - a mound system, an ` +
+            `aerobic treatment unit, or a different field design - rather than a conventional gravity system. That's the gap this ` +
+            `site's cost figures are pointing at: roughly ${money(CONVENTIONAL_SYSTEM_COST_USD.typical)} for a conventional system ` +
+            `versus ${money(ENGINEERED_SYSTEM_COST_USD.typical)} typical for an engineered one.</p>`,
+        },
+      ],
+    },
+    {
+      slug: 'conventional-vs-engineered-septic-systems',
+      title: `Conventional vs. engineered septic systems`,
+      description: `What separates a standard gravity septic system from a mound or aerobic-treatment system, what triggers needing one, and what each actually costs.`,
+      blocks: [
+        {
+          h2: 'The conventional system',
+          html: `<p>A conventional system relies on gravity: wastewater flows from a septic tank into a buried drain field, where it ` +
+            `percolates through the soil naturally. It's the cheapest and simplest option, and it's what a "not limited" or borderline ` +
+            `"somewhat limited" soil rating usually allows. Typical cost: ${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-` +
+            `${money(CONVENTIONAL_SYSTEM_COST_USD.high)}.</p>`,
+        },
+        {
+          h2: 'When soil forces an engineered system',
+          html: `<p>Soil that's too dense, too shallow over bedrock or a water table, or otherwise too slow to absorb wastewater at a ` +
+            `safe rate fails a conventional design. That's the practical meaning of a "very limited" SSURGO rating - it's the soil ` +
+            `condition most likely to require something other than plain gravity.</p>`,
+        },
+        {
+          h2: 'Mound systems',
+          html: `<p>A mound system builds a raised bed of sand and gravel above the natural soil, giving wastewater the depth of suitable ` +
+            `material it doesn't have naturally before it reaches groundwater. It's the more common engineered fix where the limiting ` +
+            `factor is depth to bedrock or water table rather than the soil's absorption rate itself.</p>`,
+        },
+        {
+          h2: 'Aerobic treatment units',
+          html: `<p>An aerobic treatment unit adds oxygen to the treatment process (mechanically, unlike a passive septic tank), producing ` +
+            `cleaner effluent before it ever reaches the drain field - which lets a smaller or lower-quality field handle it safely. ` +
+            `It requires more maintenance than a passive system, including periodic service contracts in most jurisdictions.</p>`,
+        },
+        {
+          h2: 'What it costs',
+          html: `<p>Engineered systems - mound or aerobic, whichever a health department's own site evaluation requires - typically run ` +
+            `${money(ENGINEERED_SYSTEM_COST_USD.low)}-${money(ENGINEERED_SYSTEM_COST_USD.high)}, against ` +
+            `${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} for a conventional system. Which ` +
+            `one a specific lot needs is exactly what a percolation test decides.</p>`,
+        },
+      ],
+    },
+    {
+      slug: 'buying-land-without-sewer-septic-checklist',
+      title: `Buying rural land? What to check before you rely on septic`,
+      description: `A pre-purchase checklist for land with no sewer connection - what to verify before you're under contract, not after.`,
+      blocks: [
+        {
+          h2: 'Check the county rating before you sign anything',
+          html: `<p>Before spending anything, look up the county here. A "very limited" or "somewhat limited" reading doesn't kill a deal, ` +
+            `but it changes the budget conversation - and it's free to check before a purchase agreement locks in a price that assumed ` +
+            `a cheap conventional system.</p>`,
+        },
+        {
+          h2: 'Make the purchase contingent on a passing perc test',
+          html: `<p>A perc-test contingency lets a buyer walk away or renegotiate if the specific lot fails - standard practice for raw ` +
+            `land in most markets, and the single most important protection here. Skipping it means finding out after closing, when ` +
+            `there's no leverage left.</p>`,
+        },
+        {
+          h2: 'Ask what the local health department actually requires',
+          html: `<p>Perc test procedures, minimum lot sizes, setback rules from wells and property lines, and which engineered-system ` +
+            `types are approved all vary by county and sometimes by state. The same soil reading can mean a different permitted design ` +
+            `- and a different price - depending on where the lot sits.</p>`,
+        },
+        {
+          h2: 'Budget for the worse outcome, not the better one',
+          html: `<p>Where a county's soil skews toward "very limited" - true for the large majority of counties on this site - the safer ` +
+            `assumption going into a negotiation is the engineered-system range (${money(ENGINEERED_SYSTEM_COST_USD.low)}-` +
+            `${money(ENGINEERED_SYSTEM_COST_USD.high)}), not the conventional one. Being pleasantly surprised by a passing perc test ` +
+            `beats being blindsided by a failing one.</p>`,
+        },
+      ],
+    },
+  ];
+}
