@@ -363,8 +363,9 @@ export function homeHtml({ headline, lede, placeholder, noun, count, browseLinks
     system routinely fails here; budget for an engineered alternative.</li>
     <li><strong>Somewhat limited</strong> — ${plural(SOMEWHAT_LIMITED_COUNT, 'county', 'counties')}. A conventional system
     can sometimes still work with design changes, but it isn't guaranteed.</li>
-    <li><strong>Not limited</strong> — ${plural(NOT_LIMITED_COUNT, 'county', 'counties')}. A conventional system is the
-    reasonable starting assumption, though any one lot can still differ.</li>
+    <li><strong>Not limited</strong> — ${NOT_LIMITED_COUNT > 0
+      ? `${plural(NOT_LIMITED_COUNT, 'county', 'counties')} on this site. A conventional system is the reasonable starting assumption, though any one lot can still differ.`
+      : `no county on this site currently gets this reading as its dominant class - USDA's absorption-field criteria are strict nationwide. Where it does apply, a conventional system is the expected default.`}</li>
   </ol>
 </section>
 
