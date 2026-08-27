@@ -739,6 +739,17 @@ export function guides() {
             `${money(CONVENTIONAL_SYSTEM_COST_USD.low)}-${money(CONVENTIONAL_SYSTEM_COST_USD.high)} for a conventional system. Which ` +
             `one a specific lot needs is exactly what a percolation test decides.</p>`,
         },
+        {
+          h2: 'Keeping a system working once it\'s in',
+          html: `<p>Both types still depend on the same soil this site rates: overloading a drain field with more water or solids ` +
+            `than the ground can absorb is what turns a passing perc test into a failed system years later. The routine upkeep is ` +
+            `the same either way - pumping the tank every 3-5 years, not flushing anything that doesn't break down, and keeping ` +
+            `heavy vehicles and new construction off the field.</p>` +
+            (ACTIVE_AMAZON_AFFILIATE
+              ? `<p class="cta"><strong><a href="${ACTIVE_AMAZON_AFFILIATE.url(ACTIVE_AMAZON_AFFILIATE.id)}" rel="sponsored noopener" target="_blank">Septic-safe enzyme treatments and maintenance supplies on Amazon</a></strong></p>
+<p class="disclosure">Affiliate link: ${esc(site.name)} may earn a commission from ${esc(ACTIVE_AMAZON_AFFILIATE.name)} on qualifying purchases, at no extra cost to you.</p>`
+              : ''),
+        },
       ],
     },
     {
