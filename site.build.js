@@ -458,10 +458,10 @@ export function staticPages() {
             `dominant class is chosen and which counties have no interpretation to report.</p>`,
         },
         {
-          h2: 'About the author',
-          html: `<p><strong>Marcus Webb</strong> is the author of the county pages on ${esc(site.name)}, and has written about ` +
-            `rural land development and on-site wastewater permitting since 2018. Each page's figures are cross-referenced ` +
-            `against USDA's published Soil Data Access tables before publication.</p>`,
+          h2: 'Written by',
+          html: `<p>The county pages on ${esc(site.name)} are written with AI tools working from USDA's Soil Data Access ` +
+            `tables, not reported by a named journalist. Each page's figures are cross-referenced against USDA's published ` +
+            `tables before publication, and the site is maintained by its publisher.</p>`,
         },
         {
           h2: 'Who runs this',
