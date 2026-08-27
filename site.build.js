@@ -547,8 +547,23 @@ export function staticPages() {
               `never live without being disclosed.</p>`,
         },
         {
+          h2: 'Your rights and how to use them',
+          html: `<p>California's CCPA/CPRA, the EU/UK's GDPR, and a growing list of other US states give you rights over ` +
+            `personal data collected about you: to know what's held, to request its deletion, and to opt out of its ` +
+            `"sale" or "sharing" for targeted advertising. ${esc(site.name)} has no accounts and no user profiles, so there ` +
+            `is no personal data tied to a name or email address to look up. What could exist is the technical log data ` +
+            `described above and${ADSENSE_ON ? ', while AdSense is active, ' : ' if display advertising is ever added, '}` +
+            `the ad-personalization data Google's own cookie sets independently of this site.</p>` +
+            `<p>To ask what's held, request deletion of anything that can be tied to you, or opt out of ad personalization ` +
+            `on this site, email <a href="mailto:contact@${esc(site.host)}">contact@${esc(site.host)}</a> - that reaches ` +
+            `the person who runs this site directly, and requests are honored on request rather than through an automated ` +
+            `form.${ADSENSE_ON ? ` You can also turn off personalized ads directly at Google's ` +
+            `<a href="https://myadcenter.google.com/" rel="nofollow noopener">Ad Center</a>, which controls AdSense's ` +
+            `cookie independently of this site.` : ''}</p>`,
+        },
+        {
           h2: 'Contact',
-          html: `<p>Questions about this policy can be sent through the ${pageLink('contact', 'contact page')}.</p>`,
+          html: `<p>Questions about this policy, or a data-rights request, can be sent through the ${pageLink('contact', 'contact page')}.</p>`,
         },
       ],
     },
