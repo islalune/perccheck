@@ -1,6 +1,7 @@
 node_modules/
 .DS_Store
 .firebase/
+firebase-debug.log
 src/data/_cache/
 
 # generated output - rebuilt by `node ../SiteFactory/factory/build.js`
