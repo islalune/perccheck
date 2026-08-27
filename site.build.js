@@ -163,10 +163,10 @@ export function page(row) {
     if (summary.tier === 'high-constraint') {
       meaning = pick(slug + '-mean', [
         `A standard gravity system routinely fails on ground like this; ${sameShare ? 'the same share' : `${veryTxt}`} of the county falls in USDA's worst absorption-field bucket outright.`,
-        `That reading means a conventional system is a poor bet here - ${veryTxt} of ${county} lands in the strictest "very limited" bucket USDA uses.`,
-        `Expect the ground itself to work against a plain gravity system; USDA's strictest bucket alone covers ${veryTxt} of the county.`,
-        `Practically, that rules out a simple gravity system for most of the county - ${veryTxt} of it sits in USDA's most-constrained bucket.`,
-        `This is the reading that pushes a project toward an engineered system rather than a conventional one, and it covers ${veryTxt} of ${county}'s land.`,
+        `That reading means a conventional system is a poor bet here - ${sameShare ? "it's already USDA's strictest \"very limited\" bucket, not a partial constraint" : `${veryTxt} of ${county} lands in the strictest "very limited" bucket USDA uses`}.`,
+        `Expect the ground itself to work against a plain gravity system; ${sameShare ? "that share is already USDA's strictest bucket, not a lesser constraint layered on top" : `USDA's strictest bucket alone covers ${veryTxt} of the county`}.`,
+        `Practically, that rules out a simple gravity system for most of the county - ${sameShare ? 'the reading above is already USDA\'s most-constrained bucket' : `${veryTxt} of it sits in USDA's most-constrained bucket`}.`,
+        `This is the reading that pushes a project toward an engineered system rather than a conventional one, ${sameShare ? `covering that same share of ${county}'s land` : `and it covers ${veryTxt} of ${county}'s land`}.`,
       ]);
     } else if (summary.tier === 'moderate-constraint') {
       meaning = pick(slug + '-mean', [
